@@ -1,0 +1,335 @@
+{
+  "contract_name": "Remittance",
+  "abi": [
+    {
+      "constant": false,
+      "inputs": [],
+      "name": "stop",
+      "outputs": [],
+      "payable": false,
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [],
+      "name": "isRunning",
+      "outputs": [
+        {
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "payable": false,
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [
+        {
+          "name": "",
+          "type": "bytes32"
+        }
+      ],
+      "name": "remittanceBook",
+      "outputs": [
+        {
+          "name": "recipient",
+          "type": "address"
+        },
+        {
+          "name": "amount",
+          "type": "uint256"
+        },
+        {
+          "name": "deadlineBlock",
+          "type": "uint256"
+        }
+      ],
+      "payable": false,
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "name": "passwordHashBeneficiary",
+          "type": "bytes32"
+        }
+      ],
+      "name": "refund",
+      "outputs": [
+        {
+          "name": "success",
+          "type": "bool"
+        }
+      ],
+      "payable": false,
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [],
+      "name": "getOwner",
+      "outputs": [
+        {
+          "name": "owner",
+          "type": "address"
+        }
+      ],
+      "payable": false,
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "name": "passwordHashBeneficiary",
+          "type": "bytes32"
+        },
+        {
+          "name": "passwordHashExchange",
+          "type": "bytes32"
+        },
+        {
+          "name": "beneficiary",
+          "type": "address"
+        }
+      ],
+      "name": "withdraw",
+      "outputs": [
+        {
+          "name": "success",
+          "type": "bool"
+        }
+      ],
+      "payable": false,
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "name": "newOwner",
+          "type": "address"
+        }
+      ],
+      "name": "changeOwner",
+      "outputs": [
+        {
+          "name": "success",
+          "type": "bool"
+        }
+      ],
+      "payable": false,
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [],
+      "name": "getMaxBlockNumber",
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "payable": false,
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [],
+      "name": "run",
+      "outputs": [],
+      "payable": false,
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "name": "newExchange",
+          "type": "address"
+        },
+        {
+          "name": "newExchangePasswordHash",
+          "type": "bytes32"
+        }
+      ],
+      "name": "changeExchange",
+      "outputs": [
+        {
+          "name": "success",
+          "type": "bool"
+        }
+      ],
+      "payable": false,
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "name": "newMaxBlocksNumber",
+          "type": "uint256"
+        }
+      ],
+      "name": "changeMaxBlockNumber",
+      "outputs": [
+        {
+          "name": "success",
+          "type": "bool"
+        }
+      ],
+      "payable": false,
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "name": "recipientAddr",
+          "type": "address"
+        },
+        {
+          "name": "blocksNumberDuration",
+          "type": "uint256"
+        },
+        {
+          "name": "passwordHashBeneficiary",
+          "type": "bytes32"
+        }
+      ],
+      "name": "addRemittance",
+      "outputs": [
+        {
+          "name": "success",
+          "type": "bool"
+        }
+      ],
+      "payable": true,
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "name": "_maxBlocksNumber",
+          "type": "uint256"
+        }
+      ],
+      "payable": false,
+      "type": "constructor"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "name": "newMaxBlockNumber",
+          "type": "uint256"
+        }
+      ],
+      "name": "LogChangeMaxBlockNumber",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "name": "who",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "name": "recipient",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "name": "amount",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "name": "deadlineBlock",
+          "type": "uint256"
+        }
+      ],
+      "name": "LogNewRemittance",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "name": "who",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "name": "amount",
+          "type": "uint256"
+        }
+      ],
+      "name": "LogWithdrawn",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "name": "who",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "name": "amount",
+          "type": "uint256"
+        }
+      ],
+      "name": "LogRefund",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "name": "exchange",
+          "type": "address"
+        }
+      ],
+      "name": "LogNewExchange",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "name": "sender",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "name": "ondOwner",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "name": "newOwner",
+          "type": "address"
+        }
+      ],
+      "name": "LogNewOwner",
+      "type": "event"
+    }
+  ],
+  "unlinked_binary": "0x60606040526000805460a060020a60ff0219167401000000000000000000000000000000000000000017815560038054600160a060020a0319169055600455341561004957600080fd5b604051602080610b63833981016040528080519150505b5b60008054600160a060020a03191633600160a060020a03161790555b600181101561008b57600080fd5b60028190555b505b610ac1806100a26000396000f3006060604052361561009e5763ffffffff60e060020a60003504166307da68f581146100a35780632014e5d1146100b857806351777109146100df5780637249fbb61461012b578063893d20e814610155578063a65b9a6014610184578063a6f9dae1146101bd578063acb82e04146101f0578063c040622614610215578063c90662e01461022a578063cc00b98614610260578063e18ff98f1461028a575b600080fd5b34156100ae57600080fd5b6100b66102b8565b005b34156100c357600080fd5b6100cb6102fa565b604051901515815260200160405180910390f35b34156100ea57600080fd5b6100f560043561030a565b6040518084600160a060020a0316600160a060020a03168152602001838152602001828152602001935050505060405180910390f35b341561013657600080fd5b6100cb600435610336565b604051901515815260200160405180910390f35b341561016057600080fd5b61016861048c565b604051600160a060020a03909116815260200160405180910390f35b341561018f57600080fd5b6100cb600435602435600160a060020a036044351661049c565b604051901515815260200160405180910390f35b34156101c857600080fd5b6100cb600160a060020a0360043516610679565b604051901515815260200160405180910390f35b34156101fb57600080fd5b610203610746565b60405190815260200160405180910390f35b341561022057600080fd5b6100b661074d565b005b341561023557600080fd5b6100cb600160a060020a0360043516602435610796565b604051901515815260200160405180910390f35b341561026b57600080fd5b6100cb600435610899565b604051901515815260200160405180910390f35b6100cb600160a060020a036004351660243560443561092f565b604051901515815260200160405180910390f35b60005433600160a060020a039081169116146102d357600080fd5b60005460a060020a900460ff16156102f6576000805460a060020a60ff02191690555b5b5b565b60005460a060020a900460ff1681565b6001602081905260009182526040909120805491810154600290910154600160a060020a039092169183565b600080600080600060149054906101000a900460ff16151561035757600080fd5b600354600160a060020a0316151561036e57600080fd5b84151561037a57600080fd5b3385600454604051600160a060020a0393909316606060020a0283526014830191909152603482015260540160405190819003902060008181526001602052604090208054919450925033600160a060020a039081169116146103dc57600080fd5b600182015415156103ec57600080fd5b600282015443116103fc57600080fd5b506001810180546000909155600160a060020a03331681156108fc0282604051600060405180830381858888f19350505050151561043957600080fd5b7fb6c0eca8138e097d71e2dd31e19a1266487f0553f170b7260ffe68bcbe9ff8a73382604051600160a060020a03909216825260208201526040908101905180910390a1600193505b5b5b505050919050565b600054600160a060020a03165b90565b60008060008060008060149054906101000a900460ff1615156104be57600080fd5b60035433600160a060020a039081169116146104d957600080fd5b600354600160a060020a031615156104f057600080fd5b8715156104fc57600080fd5b86151561050857600080fd5b600160a060020a038616151561051d57600080fd5b600354600160a060020a031687604051600160a060020a0392909216606060020a0282526014820152603401604051908190039020600454909450841461056357600080fd5b858885604051600160a060020a0393909316606060020a02835260148301919091526034820152605401604051908190039020600081815260016020526040902080549194509250600160a060020a038781169116146105c257600080fd5b600182015415156105d257600080fd5b81600201544311156105e357600080fd5b506001810180546000909155600354600160a060020a031681156108fc0282604051600060405180830381858888f19350505050151561062257600080fd5b7fe0535c2eb3e1755a11a8ee1dba6e7b72ea1487e87be0d02fca7c1038eaacbd5c8682604051600160a060020a03909216825260208201526040908101905180910390a1600194505b5b5b5b505050509392505050565b6000805433600160a060020a0390811691161461069557600080fd5b600160a060020a03821615156106aa57600080fd5b600054600160a060020a0383811691161461073c576000547f95a4124b32fadd40e6e63088992a62e3505e61d1683b783d03e575d7c1dfb967903390600160a060020a031684604051600160a060020a03938416815291831660208301529091166040808301919091526060909101905180910390a160008054600160a060020a031916600160a060020a0384161790555b5060015b5b919050565b6002545b90565b60005433600160a060020a0390811691161461076857600080fd5b60005460a060020a900460ff1615156102f6576000805460a060020a60ff02191660a060020a1790555b5b5b565b6000805460a060020a900460ff1615156107af57600080fd5b60005433600160a060020a039081169116146107ca57600080fd5b600160a060020a03831615156107df57600080fd5b8115156107eb57600080fd5b600354600160a060020a0384811691161461088d5760038054600160a060020a031916600160a060020a0385161790558282604051600160a060020a0392909216606060020a02825260148201526034016040519081900390206004557f0fb0dacda32e48cd4d2637b881efbf2cecfadc8082b3c0cfca0abdbd3f58f82f83604051600160a060020a03909116815260200160405180910390a1506001610891565b5060005b5b5b92915050565b6000805460a060020a900460ff1615156108b257600080fd5b60005433600160a060020a039081169116146108cd57600080fd5b6000821180156108df57506002548214155b156109245760028290557fb4801f22a478a16d0c9fbecf392b2521443e420983d1da7d4ff11d757c61a79b8260405190815260200160405180910390a1506001610740565b5060005b5b5b919050565b600080600080600060149054906101000a900460ff16151561095057600080fd5b600354600160a060020a0316151561096757600080fd5b600160a060020a038716151561097c57600080fd5b60025486118061098c5750600186105b1561099657600080fd5b60013410156109a457600080fd5b8415156109b057600080fd5b85430192503385600454604051600160a060020a0393909316606060020a028352601483019190915260348201526054016040519081900390206000818152600160208190526040918290208054600160a060020a031916600160a060020a038c1617815534918101829055600281018790559294509192507f475e7150e6e0aa75fcc6a7d39a31de5d10134be3c57378a0a77f170204f1061d9133918a9190879051600160a060020a0394851681529290931660208301526040808301919091526060820192909252608001905180910390a1600193505b5b5b50505093925050505600a165627a7a72305820e3bcf3ee5fc7116fedc52bf3361f3cc570ff50c7f0f4069a7942d154a0ac1c3c0029",
+  "networks": {},
+  "schema_version": "0.0.5",
+  "updated_at": 1516214839609
+}
