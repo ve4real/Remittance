@@ -21,7 +21,7 @@ contract Remittance is Runnable {
 	mapping(bytes32 => RemittanceStruct) public remittanceBook;
 	uint private maxBlocksNumber;
 
-	function Remittance(uint _maxBlocksNumber){
+	function Remittance(uint _maxBlocksNumber, bool initialState) Runnable(initialState){
 		require(_maxBlocksNumber >= 1);
 		maxBlocksNumber = _maxBlocksNumber;
 	}

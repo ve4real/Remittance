@@ -8,9 +8,9 @@ contract Runnable is Owned{
 
 	bool private isRunning = true;
 
-	/*Runnable(bool initialState){
+	function Runnable(bool initialState){
 		isRunning = initialState;
-	}*/
+	}
 
 	function stop() public onlyOwner{
 		require(isRunning);

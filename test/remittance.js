@@ -24,7 +24,7 @@ contract('Remittance', accounts => {
 	var amount = "1000";
 
 	before(function(){
-		return Remittance.new(maxBlocksNumber, {from: owner})
+		return Remittance.new(maxBlocksNumber, true, {from: owner})
 		.then(_instance => contract = _instance);
 	});
 
