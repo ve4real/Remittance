@@ -4,7 +4,6 @@ import "./Runnable.sol";
 
 contract Remittance is Runnable {
 
-	//event DebugIds(bytes32 id);
 	event LogChangeMaxBlockNumber(uint newMaxBlockNumber);
 	event LogNewRemittance(address who, address recipient, uint amount, uint deadlineBlock);
 	event LogWithdrawn(address who, uint amount);
@@ -12,55 +11,21 @@ contract Remittance is Runnable {
 	event LogNewExchange(address exchange);
 
 	struct RemittanceStruct{
-		address recipient;
+		address from;
 		uint amount;
 		uint deadlineBlock; //how much blocks the recipient can wait before losing right to withdraw
-	}
-
-
-	modifier onlyFromExchange(){
-		require(msg.sender == exchange);
-		_;
-	}
-
-	modifier onlyIfExchangeExists(){
-		require(exchange != 0x0);
-		_;
 	}
 
 
 	/*****************************************/
 	mapping(bytes32 => RemittanceStruct) public remittanceBook;
 	uint private maxBlocksNumber;
-	address private exchange = 0x0;
-	bytes32 private exchangePass = 0x0;
-
-
 
 	function Remittance(uint _maxBlocksNumber){
-		if(_maxBlocksNumber < 1) revert();
+		require(_maxBlocksNumber >= 1);
 		maxBlocksNumber = _maxBlocksNumber;
 	}
 
-	//not sure about this...
-	function changeExchange(address newExchange, bytes32 newExchangePasswordHash)
-	onlyIfRunning
-	onlyOwner
-	public
-	returns(bool success)
-	{
-		if(newExchange == 0x0) revert();
-		if(newExchangePasswordHash == 0x0) revert();
-		
-		if(newExchange != exchange){
-			exchange = newExchange;
-			exchangePass = keccak256(newExchange, newExchangePasswordHash); 
-			LogNewExchange(newExchange);
-			return true;
-		}
-
-		return false;
-	}
 
 	function changeMaxBlockNumber(uint newMaxBlocksNumber)
 	onlyIfRunning
@@ -68,95 +33,105 @@ contract Remittance is Runnable {
 	public
 	returns(bool success)
 	{
-		if(newMaxBlocksNumber > 0 && newMaxBlocksNumber!=maxBlocksNumber){
-			maxBlocksNumber = newMaxBlocksNumber;
-			LogChangeMaxBlockNumber(newMaxBlocksNumber);
-			return true;
-		}
-
-		return false;
+		require(newMaxBlocksNumber > 0);
+		require(newMaxBlocksNumber != maxBlocksNumber);
+		
+		maxBlocksNumber = newMaxBlocksNumber;
+		LogChangeMaxBlockNumber(newMaxBlocksNumber);
+		return true;
 	}
 
-	function getMaxBlockNumber() public returns(uint){
+	//this could be a problem, but i couldn't use the web3 sha3 function because the 
+	//result was always different from this
+	function computeKeccak256(bytes32 password1, bytes32 password2, address exchangeAddr)
+	public
+    constant 
+    returns(bytes32 hash) 
+    {
+        return keccak256(password1, password2, exchangeAddr);
+    }
+
+
+	function getMaxBlockNumber() 
+	constant 
+	public
+	returns(uint)
+	{
 		return maxBlocksNumber;
 	}
 
 
-	function addRemittance(address recipientAddr, uint blocksNumberDuration, bytes32 passwordHashRecipient)
+	//now the information regarding the exchange is hashed directly in the password
+	function addRemittance(address recipientAddr, uint blocksNumberDuration, bytes32 passwordHash)
 	payable
 	onlyIfRunning
-	onlyIfExchangeExists
 	public
 	returns(bool success)
 	{
 		//check values
-		if(recipientAddr == 0x0) revert();
-		if(blocksNumberDuration > maxBlocksNumber || blocksNumberDuration < 1) revert();
-		if(msg.value < 1) revert();
-		if(passwordHashRecipient == 0x0) revert();
+		require(recipientAddr != 0x0);
+		require(blocksNumberDuration <= maxBlocksNumber);
+		require(blocksNumberDuration > 0);
+		require(msg.value > 0);
+		require(passwordHash != 0x0);
 		
 		//compute deadline in blocks number
 		uint deadlineBlock = block.number + blocksNumberDuration;
-		bytes32 remittanceId = keccak256(recipientAddr, passwordHashRecipient, exchangePass);
-
-		//i should check if the remittanceId exists in the mapping...
-		RemittanceStruct storage r = remittanceBook[remittanceId];
-		r.recipient = recipientAddr;
+		
+		//passwordHash is the hash of the passwords + the exchange address
+		RemittanceStruct storage r = remittanceBook[passwordHash];
+		//check if it is empty
+		require(r.amount == 0);
+		r.from = msg.sender;
 		r.amount = msg.value;
 		r.deadlineBlock = deadlineBlock;
 
+		//recipient address is used only for event log
 		LogNewRemittance(msg.sender, recipientAddr, msg.value, deadlineBlock);
 		return true;
 	}
 
-
-	function withdraw(bytes32 passwordHashRecipient, bytes32 passwordHashExchange, address recipientAddr)
+	//to be sure that only the exchange could withdraw, i put the msg.sender in the keccak256 function
+	function withdraw(bytes32 passwordRecipient, bytes32 passwordExchange)
 	onlyIfRunning
-	onlyFromExchange
-	onlyIfExchangeExists
 	public
 	returns(bool success)
 	{
-		if(passwordHashRecipient == 0x0) revert();
-		if(passwordHashExchange == 0x0) revert();
-		if(recipientAddr == 0x0) revert();
+		require(passwordRecipient != 0x0);
+		require(passwordExchange != 0x0);
 
-		bytes32 pass = keccak256(exchange, passwordHashExchange);
-		if(pass != exchangePass) revert();
-		
-		bytes32 remittanceId = keccak256(recipientAddr, passwordHashRecipient, exchangePass);
-		
-
-		RemittanceStruct storage r = remittanceBook[remittanceId];
-		
-		if(r.recipient != recipientAddr) revert();
-		if(r.amount == 0) revert();
-		if(block.number > r.deadlineBlock) revert();
+		//using the msg.sender let me manage multiple exchanges
+		bytes32 remittanceId = keccak256(passwordRecipient, passwordExchange, msg.sender);
+		RemittanceStruct storage r = remittanceBook[remittanceId];		
+		//if the sender is not the exchange this will fail automatically, not finding the entry in the mapping
+		require(r.amount > 0);
+		require(block.number <= r.deadlineBlock);
 
 		uint amount = r.amount;
 		r.amount = 0;
-		exchange.transfer(amount);
+		msg.sender.transfer(amount);
 
-		LogWithdrawn(recipientAddr, amount);
+		LogWithdrawn(msg.sender, amount);
+
 
 		return true;
 	}
 
 
-	function refund(bytes32 passwordHashRecipient, address recipientAddr)
+	function refund(bytes32 passwordHash)
 	onlyIfRunning
-	onlyIfExchangeExists
 	public
 	returns(bool success)
 	{
-		if(passwordHashRecipient == 0x0) revert();
+		require(passwordHash != 0x0);
 
-		bytes32 remittanceId = keccak256(recipientAddr, passwordHashRecipient, exchangePass);
-		RemittanceStruct storage r = remittanceBook[remittanceId];
+		RemittanceStruct storage r = remittanceBook[passwordHash];
 
-		if(r.recipient != recipientAddr) revert();
-		if(r.amount == 0) revert();
-		if(block.number <= r.deadlineBlock) revert();
+		// this is important, cause after the addRemittance the password hash is known
+		// so if i do not check the sender, anybody could refunds.
+		require(r.from == msg.sender); 
+		require(r.amount > 0);
+		require(block.number > r.deadlineBlock);
 
 		uint amount = r.amount;
 		r.amount = 0;

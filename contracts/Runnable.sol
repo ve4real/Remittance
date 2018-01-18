@@ -4,16 +4,24 @@ import "./Owned.sol";
 
 contract Runnable is Owned{
 
-	bool public isRunning = true;
+	event LogChangeState(bool isRunning);
+
+	bool private isRunning = true;
+
+	/*Runnable(bool initialState){
+		isRunning = initialState;
+	}*/
 
 	function stop() public onlyOwner{
-		if(isRunning)
-			isRunning = false;
+		require(isRunning);
+		isRunning = false;
+		LogChangeState(false);
 	}
 
 	function run() public onlyOwner{
-		if(!isRunning)
-			isRunning = true;
+		require(!isRunning);
+		isRunning = true;
+		LogChangeState(true);
 	}
 
 	modifier onlyIfRunning{

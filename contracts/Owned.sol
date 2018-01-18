@@ -11,6 +11,7 @@ contract Owned {
 
 
 	function getOwner()
+	constant
 	returns (address owner)
 	{
 		return _owner;
@@ -27,12 +28,14 @@ contract Owned {
 	onlyOwner 
 	returns(bool success)
 	{
-		if(newOwner == 0) revert();
+		require(newOwner != 0);
 
-		if(newOwner != _owner){
-			LogNewOwner(msg.sender, _owner, newOwner);
-			_owner = newOwner;
-		}
+		address currentOwner = _owner;
+		require(newOwner != currentOwner);
+
+		LogNewOwner(msg.sender, currentOwner, newOwner);
+		_owner = newOwner;
+		
 
 		return true;
 	} 

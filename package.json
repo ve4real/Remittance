@@ -12,6 +12,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "solidity-sha3": "^0.4.1",
     "truffle-default-builder": "^2.0.0"
   }
 }

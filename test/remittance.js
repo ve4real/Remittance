@@ -1,4 +1,4 @@
-const Remittance = artifacts.require('./Remittance.sol');
+Remittance = artifacts.require('./Remittance.sol');
 const Pr = require("bluebird");
 Pr.promisifyAll(web3.eth, { suffix: "Promise" });
 web3.eth.getTransactionReceiptMined = require("./getTransactionReceiptMined.js");
@@ -12,9 +12,15 @@ contract('Remittance', accounts => {
 	const user1 = accounts[2];
 	const user2 = accounts[3];
 
+	let password;
 	var maxBlocksNumber = 1000000;
-	var exchangePasswordHash = "0x476032fdfce66e2426a1cce13746176239a6bb761eabf5fd298b872a32feddd6"; 
-	var user1PasswordHash = "0xb67af5e18047a007879716c3a292d50ccdc0dfb81de2d492bbf5ed6426f0ae96";
+	var exchangePassword = "0x264d0bd8021742eb526cf606f0d01efcaaf25d952cab722fa2865d5bab1bc6c6";
+	var recipientPassword = "0x32d5ea7a0637317b2a77acfc334cad8e468820f26481a4389e136bb36fb39bb4";
+
+	//cannot make it works... i'm not able to create the same output of solidity keccak256
+	//const passwordHash = web3.sha3(web3.toHex(recipientPassword), web3.toHex(exchangePassword), web3.toHex(exchange), {encoding: 'hex'});
+	//console.log(passwordHash);
+	
 	var amount = "1000";
 
 	before(function(){
@@ -24,23 +30,19 @@ contract('Remittance', accounts => {
 
 	describe("Add new remittance", () => {
 
-		it("Should reject because no exchange has been set", function(){
-			return expectedException(
-                () => contract.addRemittance(user2, 500, user1PasswordHash, {from: user1, value: amount, gas:3000000}),
-                3000000);
+		//security problem... i could not use the web3 functions to copy solidity keccak behavior
+		it("Should create a new password Hash", function(){
+			return contract.computeKeccak256(recipientPassword, exchangePassword, exchange)
+			.then( hash => {
+				password = hash;
+				//console.log(password);
+			});
 		});
 
-		it("Should add a new exchange", function(){
-			return contract.changeExchange(exchange, exchangePasswordHash, {from: owner})
-			.then(_txObject => {
-	            assert.strictEqual(_txObject.logs.length, 1);
-	            assert.strictEqual(_txObject.logs[0].event, "LogNewExchange");
-	            assert.strictEqual(_txObject.logs[0].args.exchange, exchange);
-	        })
-		});
+
 
 		it("Should add a new remittance", function(){
-			return contract.addRemittance(user2, 500, user1PasswordHash, {from: user1, value: amount})
+			return contract.addRemittance(user2, 500, password, {from: user1, value: amount})
 			.then(_txObject => {
 	            assert.strictEqual(_txObject.logs.length, 1);
 	            assert.strictEqual(_txObject.logs[0].event, "LogNewRemittance");
@@ -55,23 +57,23 @@ contract('Remittance', accounts => {
 		
 		it("Should fails withdrawing because of wrong password", function(){
 			return expectedException(
-				() => contract.withdraw("Wr0ngP4ssw0rd", exchangePasswordHash, user2, {from: exchange, gas:3000000}),
+				() => contract.withdraw("Wr0ngP4ssw0rd", exchangePassword, {from: exchange, gas:3000000}),
 				3000000);
 		});
 
 		it("Should withdraws remittance", function(){
-			return contract.withdraw(user1PasswordHash, exchangePasswordHash, user2, {from: exchange})
-			.then(_txObject =>{
+			return contract.withdraw(recipientPassword, exchangePassword, {from: exchange})
+			.then(_txObject => {
 				assert.strictEqual(_txObject.logs.length, 1);
 	            assert.strictEqual(_txObject.logs[0].event, "LogWithdrawn");
-	            assert.strictEqual(_txObject.logs[0].args.who, user2);
+	            assert.strictEqual(_txObject.logs[0].args.who, exchange);
 	            assert.strictEqual(_txObject.logs[0].args.amount.toString(10), amount);
 			})
 		});
 
 		it("Should fails withdrawing again the same remittance", function(){
 			return expectedException(
-				() => contract.withdraw(user1PasswordHash, exchangePasswordHash, user2, {from: exchange, gas:3000000}),
+				() => contract.withdraw(recipientPassword, exchangePassword, {from: exchange, gas:3000000}),
 				3000000);
 		});
 
@@ -83,7 +85,7 @@ contract('Remittance', accounts => {
 		it("Should add a new remittance and fails to refund", function(){
 			var blockNumberDuration = 2;
 
-			return contract.addRemittance(user2, blockNumberDuration, user1PasswordHash, {from: user1, value: amount})
+			return contract.addRemittance(user2, blockNumberDuration, password, {from: user1, value: amount})
 			.then(_txObject => {
 				const currentBlock = new web3.BigNumber(_txObject.receipt.blockNumber);
 
@@ -96,22 +98,21 @@ contract('Remittance', accounts => {
 	        })
 	        .then(() => {
 	        	return expectedException(
-					() => contract.refund(user1PasswordHash, user2, {from: user1, gas:3000000}),
+					() => contract.refund(password, {from: user1, gas:3000000}),
 					3000000);
 	        })
 		});
 
 		it("Should fails to refund because of wrong password again", function(){
 			return expectedException(
-				() => contract.refund("Wr0ngP4ssw0rd", user2, {from: user1, gas:3000000}),
+				() => contract.refund("Wr0ngP4ssw0rd", {from: user1, gas:3000000}),
 				3000000);
 		});
 
-		it("Should withdraws remittance", function(){
+		it("Should refund remittance", function(){
 			
-		   	return contract.refund(user1PasswordHash, user2, {from: user1})
+		   	return contract.refund(password, {from: user1})
 			.then(_txObject => {
-				console.log(_txObject.receipt.blockNumber);
 
 				assert.strictEqual(_txObject.logs.length, 1);
 	            assert.strictEqual(_txObject.logs[0].event, "LogRefund");
