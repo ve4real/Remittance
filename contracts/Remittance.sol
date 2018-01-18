@@ -14,6 +14,7 @@ contract Remittance is Runnable {
 		address from;
 		uint amount;
 		uint deadlineBlock; //how much blocks the recipient can wait before losing right to withdraw
+		bool disclosed;
 	}
 
 
@@ -22,7 +23,7 @@ contract Remittance is Runnable {
 	uint private maxBlocksNumber;
 
 	function Remittance(uint _maxBlocksNumber, bool initialState) Runnable(initialState){
-		require(_maxBlocksNumber >= 1);
+		require(_maxBlocksNumber > 0);
 		maxBlocksNumber = _maxBlocksNumber;
 	}
 
@@ -41,8 +42,6 @@ contract Remittance is Runnable {
 		return true;
 	}
 
-	//this could be a problem, but i couldn't use the web3 sha3 function because the 
-	//result was always different from this
 	function computeKeccak256(bytes32 password1, bytes32 password2, address exchangeAddr)
 	public
     constant 
@@ -82,9 +81,11 @@ contract Remittance is Runnable {
 		RemittanceStruct storage r = remittanceBook[passwordHash];
 		//check if it is empty
 		require(r.amount == 0);
+		require(!r.disclosed);
 		r.from = msg.sender;
 		r.amount = msg.value;
 		r.deadlineBlock = deadlineBlock;
+		r.disclosed = false;
 
 		//recipient address is used only for event log
 		LogNewRemittance(msg.sender, recipientAddr, msg.value, deadlineBlock);
@@ -109,6 +110,7 @@ contract Remittance is Runnable {
 
 		uint amount = r.amount;
 		r.amount = 0;
+		r.disclosed = true;
 		msg.sender.transfer(amount);
 
 		LogWithdrawn(msg.sender, amount);
@@ -135,6 +137,7 @@ contract Remittance is Runnable {
 
 		uint amount = r.amount;
 		r.amount = 0;
+		r.disclosed = true;
 		msg.sender.transfer(amount);
 
 		LogRefund(msg.sender, amount);

@@ -13,14 +13,12 @@ contract('Remittance', accounts => {
 	const user2 = accounts[3];
 
 	let password;
+	let anotherPassword;
 	var maxBlocksNumber = 1000000;
-	var exchangePassword = "0x264d0bd8021742eb526cf606f0d01efcaaf25d952cab722fa2865d5bab1bc6c6";
-	var recipientPassword = "0x32d5ea7a0637317b2a77acfc334cad8e468820f26481a4389e136bb36fb39bb4";
+	var exchangePassword = web3.sha3(web3.toHex("AStrongPassword"),{encoding:'hex'});
+	var recipientPassword = web3.sha3(web3.toHex("AnotherStrongPassword"),{encoding:'hex'});
+	var anotherRecipientPassword = web3.sha3(web3.toHex("AStrongerPassword"),{encoding:'hex'});
 
-	//cannot make it works... i'm not able to create the same output of solidity keccak256
-	//const passwordHash = web3.sha3(web3.toHex(recipientPassword), web3.toHex(exchangePassword), web3.toHex(exchange), {encoding: 'hex'});
-	//console.log(passwordHash);
-	
 	var amount = "1000";
 
 	before(function(){
@@ -30,12 +28,10 @@ contract('Remittance', accounts => {
 
 	describe("Add new remittance", () => {
 
-		//security problem... i could not use the web3 functions to copy solidity keccak behavior
 		it("Should create a new password Hash", function(){
 			return contract.computeKeccak256(recipientPassword, exchangePassword, exchange)
 			.then( hash => {
 				password = hash;
-				//console.log(password);
 			});
 		});
 
@@ -82,10 +78,24 @@ contract('Remittance', accounts => {
 
 
 	describe("Refund funds", () => {
-		it("Should add a new remittance and fails to refund", function(){
-			var blockNumberDuration = 2;
+		var blockNumberDuration = 2;
 
-			return contract.addRemittance(user2, blockNumberDuration, password, {from: user1, value: amount})
+		it("Should fail to create new remittance due to old password", function(){
+			return expectedException(
+				() => contract.addRemittance(user2, blockNumberDuration, password, {from: user1, value: amount, gas: 3000000}),
+				3000000);
+		});
+
+
+		it("Should create a new password Hash", function(){
+			return contract.computeKeccak256(anotherRecipientPassword, exchangePassword, exchange)
+			.then( hash => {
+				anotherPassword = hash;
+			});
+		});
+
+		it("Should add a new remittance and fails to refund", function(){
+			return contract.addRemittance(user2, blockNumberDuration, anotherPassword, {from: user1, value: amount})
 			.then(_txObject => {
 				const currentBlock = new web3.BigNumber(_txObject.receipt.blockNumber);
 
@@ -98,7 +108,7 @@ contract('Remittance', accounts => {
 	        })
 	        .then(() => {
 	        	return expectedException(
-					() => contract.refund(password, {from: user1, gas:3000000}),
+					() => contract.refund(anotherPassword, {from: user1, gas:3000000}),
 					3000000);
 	        })
 		});
@@ -111,7 +121,7 @@ contract('Remittance', accounts => {
 
 		it("Should refund remittance", function(){
 			
-		   	return contract.refund(password, {from: user1})
+		   	return contract.refund(anotherPassword, {from: user1})
 			.then(_txObject => {
 
 				assert.strictEqual(_txObject.logs.length, 1);
